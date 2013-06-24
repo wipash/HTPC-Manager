@@ -35,7 +35,6 @@ class Sickbeard:
         return htpc.LOOKUP.get_template('sickbeard_view.html').render(scriptname='sickbeard_view', tvdbid=tvdbid)
 
     @cherrypy.expose()
-    @cherrypy.tools.json_out()
     def ping(self, sickbeard_host, sickbeard_port, sickbeard_apikey, sickbeard_basepath, **kwargs):
         self.logger.debug("Testing connectivity")
         try:
@@ -46,23 +45,25 @@ class Sickbeard:
 
             url = 'http://' + sickbeard_host + ':' + sickbeard_port + sickbeard_basepath + 'api/' + sickbeard_apikey + '/?cmd='
             self.logger.debug("Trying to contact sickbeard via " + url)
-            response = loads(urlopen(url + 'sb.ping', timeout=10).read())
-            if response.get('result') == "success":
+            response = urlopen(url + 'sb.ping', timeout=10).read()
+            responseDict = loads(response)
+            if responseDict.get('result') == "success":
+                cherrypy.response.headers['Content-Type'] = 'application/json'
                 return response
         except:
             self.logger.error("Unable to contact sickbeard via " + url)
             return
 
     @cherrypy.expose()
-    @cherrypy.tools.json_out()
     def GetShowList(self):
         self.logger.debug("Fetching Show list")
+        cherrypy.response.headers['Content-Type'] = 'application/json'
         return self.fetch('shows&sort=name')
 
     @cherrypy.expose()
-    @cherrypy.tools.json_out()
     def GetNextAired(self):
         self.logger.debug("Fetching Next Aired Episodes")
+        cherrypy.response.headers['Content-Type'] = 'application/json'
         return self.fetch('future')
 
     @cherrypy.expose()
@@ -78,39 +79,39 @@ class Sickbeard:
         return self.fetch('show.getposter&tvdbid=' + tvdbid, True)
 
     @cherrypy.expose()
-    @cherrypy.tools.json_out()
     def GetHistory(self, limit=''):
         self.logger.debug("Fetching History")
+        cherrypy.response.headers['Content-Type'] = 'application/json'
         return self.fetch('history&limit=' + limit)
 
     @cherrypy.expose()
-    @cherrypy.tools.json_out()
     def GetLogs(self):
         self.logger.debug("Fetching Logs")
+        cherrypy.response.headers['Content-Type'] = 'application/json'
         return self.fetch('logs&min_level=info')
 
     @cherrypy.expose()
-    @cherrypy.tools.json_out()
     def AddShow(self, tvdbid):
         self.logger.debug("Adding a Show")
+        cherrypy.response.headers['Content-Type'] = 'application/json'
         return self.fetch('show.addnew&tvdbid=' + tvdbid)
 
     @cherrypy.expose()
-    @cherrypy.tools.json_out()
     def GetShow(self, tvdbid):
         self.logger.debug("Fetching Show")
+        cherrypy.response.headers['Content-Type'] = 'application/json'
         return self.fetch('show&tvdbid=' + tvdbid)
 
     @cherrypy.expose()
-    @cherrypy.tools.json_out()
     def GetSeason(self, tvdbid, season):
         self.logger.debug("Fetching Season")
+        cherrypy.response.headers['Content-Type'] = 'application/json'
         return self.fetch('show.seasons&tvdbid=' + tvdbid + '&season=' + season)
 
     @cherrypy.expose()
-    @cherrypy.tools.json_out()
     def SearchEpisodeDownload(self, tvdbid, season, episode):
         self.logger.debug("Fetching Episode Downloads")
+        cherrypy.response.headers['Content-Type'] = 'application/json'
         return self.fetch('episode.search&tvdbid=' + tvdbid + '&season=' + season + '&episode=' + episode, False, 45)
 
     @cherrypy.expose()
@@ -134,13 +135,10 @@ class Sickbeard:
             if not (sickbeard_basepath.endswith('/')):
               sickbeard_basepath += "/"
             url = 'http://' + host + ':' + str(port) + sickbeard_basepath + 'api/' + apikey + '/?cmd=' + cmd
-            
+
             self.logger.debug("Fetching information from: " + url)
 
-            if (img == True):
-              return urlopen(url, timeout=timeout).read()
-
-            return loads(urlopen(url, timeout=timeout).read())
+            return urlopen(url, timeout=timeout).read()
         except:
             self.logger.error("Unable to fetch information from: " + url)
             return

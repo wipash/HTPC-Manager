@@ -30,8 +30,13 @@ function loadShows() {
                 row.append($('<td>').html('No shows found'));
                 $('#tvshows_table_body').append(row);
             }
+
+            var itemCount = 0;
+            $('#sbcontent').append($('<div>').addClass('row-fluid'));
             $.each(result.data, function (showname, tvshow) {
+
                 var name = $('<a>').attr('href',WEBDIR + 'sickbeard/view/' + tvshow.tvdbid).text(showname);
+/*
                 var row = $('<tr>')
                 row.append(
                   $('<td>').html(name),
@@ -41,6 +46,38 @@ function loadShows() {
                   $('<td>').html(sickbeardStatusLabel(tvshow.quality))
                 );
                 $('#tvshows_table_body').append(row);
+*/
+
+
+                itemCount++;
+                if (itemCount%3 == 1) {
+                    $('#tvshows').append($('<div>').addClass('row-fluid'));
+                }
+
+                showMedia =  $('<div>').addClass('media');
+
+                imageLink = $('<a>').addClass('pull-left').attr('href', WEBDIR + 'sickbeard/view/' + tvshow.tvdbid);
+                imageLink.append($('<img>').addClass('media-object thumbnail').attr('src', '/sickbeard/GetPoster/' + tvshow.tvdbid).attr('width', '100'));
+                showMedia.append(imageLink);
+
+                showBody = $('<div>').addClass('media-body');
+                showHeader = $('<h4>').html(name).addClass('media-heading');
+                showBody.append(showHeader);
+
+                var nextDate = tvshow.next_ep_airdate;
+                if (nextDate == '') {
+                    nextDate = 'Unknown';
+                }
+                showBody.append($('<p>').html('Next episode: ' + nextDate + '<br />Network: ' + tvshow.network));
+
+                showBody.append($('<p>').html(sickbeardStatusLabel(tvshow.status)));
+                showBody.append($('<p>').html(sickbeardStatusLabel(tvshow.quality)));
+
+                showMedia.append(showBody);
+
+                showContainer = $('<div>').addClass('span4').append(showMedia);
+
+                $('#tvshows .row-fluid:last').append(showContainer);
             });
             $('#tvshows_table_body').parent().trigger('update');
             $('#tvshows_table_body').parent().trigger("sorton",[[[0,0]]]);
