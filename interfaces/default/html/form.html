@@ -24,8 +24,15 @@ settings =  htpc.settings.Settings()
                 % elif field.get('type') == 'select':
                 <select name="${field.get('name')}" id="${field.get('name')}">
                     % for option in field.get('options'):
+                    <%
+                    selected = False
+                    if option.get('selected'):
+                        selected = True
+                    elif settings.get(field.get('name'), False) == option.get('value'):
+                        selected = True
+                    %>
                     <option value="${option.get('value')}"${
-                    ' selected="selected"' if option.get('selected', 0) else ''}>${option.get('name')}</option>
+                    ' selected="selected"' if selected else ''}>${option.get('name')}</option>
                     % endfor
                 </select>
                 % endif
