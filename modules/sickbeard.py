@@ -18,12 +18,18 @@ class Sickbeard:
                 {'type': 'text', 'label': 'IP / Host *', 'name': 'sickbeard_host'},
                 {'type': 'text', 'label': 'Port *', 'name': 'sickbeard_port'},
                 {'type': 'text', 'label': 'API key', 'name': 'sickbeard_apikey'},
-                {'type': 'text', 'label': 'Basepath (starts with a slash)', 'name': 'sickbeard_basepath'}
+                {'type': 'text', 'label': 'Basepath (starts with a slash)', 'name': 'sickbeard_basepath'},
+                {'type': 'select', 'label': 'View type', 'name': 'sickbeard_view', 'options':[
+                    {'name': 'List', 'value': 'list'},
+                    {'name': 'Posters', 'value': 'poster'},
+                    {'name': 'Banners', 'value': 'banner'}
+                ]}
         ]})
 
     @cherrypy.expose()
     def index(self):
-        return htpc.LOOKUP.get_template('sickbeard.html').render(scriptname='sickbeard')
+        view = htpc.settings.Settings().get('sickbeard_view', 'list')
+        return htpc.LOOKUP.get_template('sickbeard.html').render(scriptname='sickbeard', view=view)
 
     @cherrypy.expose()
     def view(self, tvdbid):

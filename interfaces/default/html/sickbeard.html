@@ -1,5 +1,8 @@
 <%inherit file="base.html"/>
 <% settings = self.attr.settings %>
+<script type="text/javascript">
+    var sickbeard_view = "${view}";
+</script>
 <div class="container">
     <div class="content maincontent">
         <h1 class="page-header page-title">
@@ -60,3 +63,17 @@
         </div>
     </div>
 </div>
+
+<script id="sickbeard-list-template" type="text/x-handlebars-template">
+  <h2>List item</h2>{{show.tvdbid}}
+  {{show.url}}
+  {{show.statusLabel}}
+</script>
+
+<script id="sickbeard-poster-template" type="text/x-handlebars-template">
+  <h2>Poster</h2>{{show.tvdbid}}
+</script>
+
+<script id="sickbeard-banner-template" type="text/x-handlebars-template">
+  <h2>Bannerr</h2>{{show.tvdbid}}
+</script>

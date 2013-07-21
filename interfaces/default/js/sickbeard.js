@@ -1,4 +1,6 @@
+var showTemplate;
 $(document).ready(function () {
+    loadHandlebarsTemplate();
     loadShows();
     loadNextAired();
     loadSickbeardHistory(25);
@@ -19,6 +21,12 @@ $(document).ready(function () {
 
 });
 
+
+function loadHandlebarsTemplate(){
+    var templateSource  = $("#sickbeard-"+sickbeard_view+"-template").html();
+    showTemplate = Handlebars.compile(templateSource);
+}
+
 function loadShows() {
     $.ajax({
         url: WEBDIR + 'sickbeard/GetShowList',
@@ -32,10 +40,15 @@ function loadShows() {
             }
 
             var itemCount = 0;
-            $('#sbcontent').append($('<div>').addClass('row-fluid'));
             $.each(result.data, function (showname, tvshow) {
 
-                var name = $('<a>').attr('href',WEBDIR + 'sickbeard/view/' + tvshow.tvdbid).text(showname);
+                tvshow.url = WEBDIR + 'sickbeard/view/' + tvshow.tvdbid;
+                tvshow.statusIcon = sickbeardStatusIcon(tvshow.status);
+
+                $('#tvshows').append(showTemplate({
+                    show: tvshow
+                }));
+
 /*
                 var row = $('<tr>')
                 row.append(
@@ -46,7 +59,7 @@ function loadShows() {
                   $('<td>').html(sickbeardStatusLabel(tvshow.quality))
                 );
                 $('#tvshows_table_body').append(row);
-*/
+
 
 
                 itemCount++;
@@ -78,6 +91,7 @@ function loadShows() {
                 showContainer = $('<div>').addClass('span4').append(showMedia);
 
                 $('#tvshows .row-fluid:last').append(showContainer);
+    */
             });
             $('#tvshows_table_body').parent().trigger('update');
             $('#tvshows_table_body').parent().trigger("sorton",[[[0,0]]]);
