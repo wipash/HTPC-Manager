@@ -3,7 +3,7 @@ import os
 import cherrypy
 import htpc
 import logging
-from sqlobject import SQLObject, SQLObjectNotFound
+from sqlobject import connectionForURI, sqlhub, SQLObject, SQLObjectNotFound
 from sqlobject.col import StringCol
 
 
@@ -18,8 +18,10 @@ class Settings:
 
     def __init__(self):
         """ Create table on load if table doesnt exist """
-        Setting.createTable(ifNotExists=True)
         self.logger = logging.getLogger('htpc.settings')
+        self.logger.debug('Connecting to database: ' + htpc.DB)
+        sqlhub.processConnection = connectionForURI('sqlite:' + htpc.DB)
+        Setting.createTable(ifNotExists=True)
 
     @cherrypy.expose()
     def index(self, **kwargs):
@@ -44,12 +46,11 @@ class Settings:
 
     def set(self, key, val):
         """ Save a setting to the database """
+        self.logger.debug("Saving settings to the database.")
         try:
             setting = Setting.selectBy(key=key).getOne()
             setting.val = val
-            self.logger.debug("Saving settings to the database.")
         except SQLObjectNotFound:
-            self.logger.error("Unable to save settings to the database.")
             Setting(key=key, val=val)
 
     def get_templates(self):
@@ -66,7 +67,6 @@ class Settings:
         path = os.path.join(htpc.TEMPLATE, "css/themes/")
         themes = []
         dirs = [d for d in os.listdir(path) if os.path.isdir(os.path.join(path, d))]
-        print dirs
         for theme in dirs:
             current = bool(theme == self.get('app_theme', 'default'))
             themes.append({'name': theme, 'value': theme, 'selected': current})

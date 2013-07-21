@@ -18,7 +18,8 @@ class Couchpotato:
                 {'type': 'text', 'label': 'IP / Host *', 'name': 'couchpotato_host'},
                 {'type': 'text', 'label': 'Port *', 'name': 'couchpotato_port'},
                 {'type': 'text', 'label': 'Basepath', 'name': 'couchpotato_basepath'},
-                {'type': 'text', 'label': 'API key', 'name': 'couchpotato_apikey'}
+                {'type': 'text', 'label': 'API key', 'name': 'couchpotato_apikey'},
+                {'type': 'bool', 'label': 'Use SSL', 'name': 'couchpotato_ssl'}
         ]})
 
     @cherrypy.expose()
@@ -27,7 +28,7 @@ class Couchpotato:
 
     @cherrypy.expose()
     @cherrypy.tools.json_out()
-    def ping(self, couchpotato_host, couchpotato_port, couchpotato_apikey, couchpotato_basepath, **kwargs):
+    def ping(self, couchpotato_host, couchpotato_port, couchpotato_apikey, couchpotato_basepath, couchpotato_ssl, **kwargs):
 
         self.logger.debug("Testing connectivity to couchpotato")
         if(couchpotato_basepath == ""):
@@ -35,7 +36,8 @@ class Couchpotato:
         if not(couchpotato_basepath.endswith('/')):
             couchpotato_basepath += "/"
 
-        url = 'http://' + couchpotato_host + ':' + couchpotato_port + couchpotato_basepath + 'api/' + couchpotato_apikey
+        ssl = 's' if sabnzbd_ssl else ''
+        url = 'http' + ssl + '://' + couchpotato_host + ':' + couchpotato_port + couchpotato_basepath + 'api/' + couchpotato_apikey
         try:
             return loads(urlopen(url + '/app.available/', timeout=10).read())
         except:
@@ -99,21 +101,21 @@ class Couchpotato:
 
     def fetch(self, path):
         try:
-            settings = htpc.settings.Settings()
-            host = settings.get('couchpotato_host', '')
-            port = str(settings.get('couchpotato_port', ''))
-            apikey = settings.get('couchpotato_apikey', '')
+            host = htpc.settings.get('couchpotato_host', '')
+            port = str(htpc.settings.get('couchpotato_port', ''))
+            apikey = htpc.settings.get('couchpotato_apikey', '')
+            couchpotato_basepath = htpc.settings.get('couchpotato_basepath', '/')
+            ssl = 's' if htpc.settings.get('couchpotato_ssl', 0) else ''
 
-            couchpotato_basepath = settings.get('couchpotato_basepath', '/')
             if(couchpotato_basepath == ""):
-              couchpotato_basepath = "/"
+                couchpotato_basepath = "/"
             if not(couchpotato_basepath.endswith('/')):
                 couchpotato_basepath += "/"
 
-            url = 'http://' + host + ':' + port + couchpotato_basepath + 'api/' + apikey + '/' + path
+            url = 'http' + ssl + '://' + host + ':' + port + couchpotato_basepath + 'api/' + apikey + '/' + path
 
             self.logger.debug("Fetching information from: " + url)
             return loads(urlopen(url, timeout=10).read())
         except:
-            self.logger.error("Unable to fetch information from " + url)
+            self.logger.error("Unable to fetch information")
             return

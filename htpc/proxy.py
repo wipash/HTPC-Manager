@@ -2,6 +2,7 @@
 import os
 import hashlib
 import htpc
+import imghdr
 import logging
 from cherrypy.lib.static import serve_file
 from urllib2 import Request, urlopen
@@ -53,7 +54,8 @@ def get_image(url, height=None, width=None, opacity=100, auth=None):
                 image = os.path.join(htpc.RUNDIR,'interfaces/default/img/fff_20.png')
 
     # Load file from disk
-    return serve_file(path=image, content_type='image/jpeg')
+    imagetype = imghdr.what(image)
+    return serve_file(path=image, content_type='image/' + imagetype)
 
 
 def download_image(url, dest, auth=None):
@@ -61,29 +63,34 @@ def download_image(url, dest, auth=None):
     logger = logging.getLogger('htpc.proxy')
     logger.debug("Downloading image from " + url + " to " + dest)
 
-    request = Request(url)
+    try:
+        request = Request(url)
 
-    if (auth):
-        request.add_header("Authorization", "Basic %s" % auth)
+        if (auth):
+            request.add_header("Authorization", "Basic %s" % auth)
 
-    with open(dest, "wb") as local_file:
-        local_file.write(urlopen(request).read())
-
+        with open(dest, "wb") as local_file:
+            local_file.write(urlopen(request).read())
+    except Exception, e:
+        pass
 
 def resize_image(img, height, width, opacity, dest):
-        """ Resize image, set opacity and save to disk """
-        size = int(width), int(height)
-        im = Image.open(img)
-        im = im.resize(size, Image.ANTIALIAS)
+    """ Resize image, set opacity and save to disk """
+    size = int(width), int(height)
+    imagetype = imghdr.what(img)
+    im = Image.open(img)
+    im = im.resize(size, Image.ANTIALIAS)
 
-        # Apply overlay if opacity is set
-        opacity = float(opacity)
-        if (opacity < 100):
-            enhance = opacity / 100
-            # Create white overlay image
-            overlay = Image.new('RGB', size, '#FFFFFF')
-            #apply overlay to resized image
-            im = Image.blend(overlay, im, enhance)
+    # Apply overlay if opacity is set
+    opacity = float(opacity)
+    if (opacity < 100):
+        enhance = opacity / 100
+        # Create white overlay image
+        overlay = Image.new('RGB', size, '#FFFFFF')
+        #apply overlay to resized image
+        im = Image.blend(overlay, im, enhance)
 
+    if imagetype == 'jpeg':
         im.save(dest, 'JPEG', quality=95)
-        return dest
+    im.save(dest, imagetype)
+    return dest

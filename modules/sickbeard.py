@@ -17,7 +17,9 @@ class Sickbeard:
                 {'type': 'text', 'label': 'Menu name', 'name': 'sickbeard_name'},
                 {'type': 'text', 'label': 'IP / Host *', 'name': 'sickbeard_host'},
                 {'type': 'text', 'label': 'Port *', 'name': 'sickbeard_port'},
+                {'type': 'text', 'label': 'Basepath', 'name': 'sickbeard_basepath'},
                 {'type': 'text', 'label': 'API key', 'name': 'sickbeard_apikey'},
+                {'type': 'bool', 'label': 'Use SSL', 'name': 'sickbeard_ssl'},
                 {'type': 'text', 'label': 'Basepath (starts with a slash)', 'name': 'sickbeard_basepath'},
                 {'type': 'select', 'label': 'View type', 'name': 'sickbeard_view', 'options':[
                     {'name': 'List', 'value': 'list'},
@@ -41,7 +43,9 @@ class Sickbeard:
         return htpc.LOOKUP.get_template('sickbeard_view.html').render(scriptname='sickbeard_view', tvdbid=tvdbid)
 
     @cherrypy.expose()
-    def ping(self, sickbeard_host, sickbeard_port, sickbeard_apikey, sickbeard_basepath, **kwargs):
+    def ping(self, sickbeard_host, sickbeard_port, sickbeard_apikey, sickbeard_basepath, sickbeard_ssl, **kwargs):
+        ssl = 's' if sickbeard_ssl else ''
+
         self.logger.debug("Testing connectivity")
         try:
             if(sickbeard_basepath == ""):
@@ -49,7 +53,7 @@ class Sickbeard:
             if not (sickbeard_basepath.endswith('/')):
               sickbeard_basepath += "/"
 
-            url = 'http://' + sickbeard_host + ':' + sickbeard_port + sickbeard_basepath + 'api/' + sickbeard_apikey + '/?cmd='
+            url = 'http' + ssl + '://' + sickbeard_host + ':' + sickbeard_port + sickbeard_basepath + 'api/' + sickbeard_apikey + '/?cmd='
             self.logger.debug("Trying to contact sickbeard via " + url)
             response = urlopen(url + 'sb.ping', timeout=10).read()
             responseDict = loads(response)
@@ -130,21 +134,22 @@ class Sickbeard:
 
     def fetch(self, cmd, img=False, timeout = 10):
         try:
-            settings = htpc.settings.Settings()
-            host = settings.get('sickbeard_host', '')
-            port = str(settings.get('sickbeard_port', ''))
-            apikey = settings.get('sickbeard_apikey', '')
-            sickbeard_basepath = settings.get('sickbeard_basepath', '/')
+            host = htpc.settings.get('sickbeard_host', '')
+            port = str(htpc.settings.get('sickbeard_port', ''))
+            apikey = htpc.settings.get('sickbeard_apikey', '')
+            ssl = 's' if htpc.settings.get('sickbeard_ssl', 0) else ''
+            sickbeard_basepath = htpc.settings.get('sickbeard_basepath', '/')
 
             if(sickbeard_basepath == ""):
                 sickbeard_basepath = "/"
             if not (sickbeard_basepath.endswith('/')):
-              sickbeard_basepath += "/"
-            url = 'http://' + host + ':' + str(port) + sickbeard_basepath + 'api/' + apikey + '/?cmd=' + cmd
+                sickbeard_basepath += "/"
+
+            url = 'http' + ssl + '://' + host + ':' + str(port) + sickbeard_basepath + 'api/' + apikey + '/?cmd=' + cmd
 
             self.logger.debug("Fetching information from: " + url)
 
             return urlopen(url, timeout=timeout).read()
         except:
-            self.logger.error("Unable to fetch information from: " + url)
+            self.logger.error("Unable to fetch information")
             return
