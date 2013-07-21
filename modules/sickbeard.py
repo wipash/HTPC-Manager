@@ -30,7 +30,7 @@ class Sickbeard:
 
     @cherrypy.expose()
     def index(self):
-        view = htpc.settings.Settings().get('sickbeard_view', 'list')
+        view = htpc.settings.get('sickbeard_view', 'list')
         return htpc.LOOKUP.get_template('sickbeard.html').render(scriptname='sickbeard', view=view)
 
     @cherrypy.expose()
