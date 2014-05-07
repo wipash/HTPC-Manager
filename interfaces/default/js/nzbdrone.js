@@ -26,20 +26,20 @@ function loadShows() {
         type: 'get',
         dataType: 'json',
         success: function (result) {
-            if (result.data.length == 0) {
+            if (result.length == 0) {
                 var row = $('<tr>')
                 row.append($('<td>').html('No shows found'));
                 $('#tvshows_table_body').append(row);
             }
-            $.each(result.data, function (showname, tvshow) {
-                var name = $('<a>').attr('href',WEBDIR + 'sickbeard/view/' + tvshow.tvdbid).text(showname);
+            $.each(result, function (derp, tvshow) {
+                //var name = $('<a>').attr('href',WEBDIR + 'sickbeard/view/' + tvshow.tvdbid).text(showname);
                 var row = $('<tr>')
                 row.append(
-                  $('<td>').html(name),
-                  $('<td>').html(sickbeardStatusLabel(tvshow.status)),
-                  $('<td>').html(tvshow.next_ep_airdate),
+                  $('<td>').html(tvshow.title),
+                  $('<td>').html(tvshow.status),
+                  $('<td>').html(tvshow.nextAiring),
                   $('<td>').html(tvshow.network),
-                  $('<td>').html(sickbeardStatusLabel(tvshow.quality))
+                  $('<td>').html(tvshow.qualityProfileId)
                 );
                 $('#tvshows_table_body').append(row);
             });
