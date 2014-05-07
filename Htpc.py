@@ -74,6 +74,8 @@ def load_modules():
     htpc.ROOT.stats = Stats()
     from modules.tvheadend import TVHeadend
     htpc.ROOT.tvheadend = TVHeadend()
+    from modules.nzbdrone import NZBDrone
+    htpc.ROOT.nzbdrone = NZBDrone()
 
 def main():
     """
