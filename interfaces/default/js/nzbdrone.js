@@ -36,7 +36,7 @@ function loadShows() {
                 var row = $('<tr>')
                 row.append(
                   $('<td>').html(tvshow.title),
-                  $('<td>').html(tvshow.status),
+                  $('<td>').html(StatusLabel(Capitalise(tvshow.status))),
                   $('<td>').html(tvshow.nextAiring),
                   $('<td>').html(tvshow.network),
                   $('<td>').html(tvshow.qualityProfileId)
@@ -271,7 +271,7 @@ function cancelAddShow() {
     $('#add_show_button').show();
 }
 
-function sickbeardStatusLabel(text){
+function StatusLabel(text){
   var statusOK = ['Continuing', 'Downloaded', 'HD'];
   var statusInfo = ['Snatched'];
   var statusError = ['Ended'];
@@ -292,14 +292,14 @@ function sickbeardStatusLabel(text){
     label.addClass('label-warning');
   }
 
-  var icon = sickbeardStatusIcon(text, true);
+  var icon = StatusIcon(text, true);
   if (icon != '') {
     label.prepend(' ').prepend(icon);
   }
   return label;
 }
 
-function sickbeardStatusIcon(iconText, white){
+function StatusIcon(iconText, white){
   var text =[
     'Downloaded',
     'Continuing',
@@ -325,4 +325,9 @@ function sickbeardStatusIcon(iconText, white){
     return icon;
   }
   return '';
+}
+
+function Capitalise(s)
+{
+    return s[0].toUpperCase() + s.slice(1);
 }
