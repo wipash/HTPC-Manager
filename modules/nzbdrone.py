@@ -18,7 +18,9 @@ class NZBDrone:
                 {'type': 'text', 'label': 'Menu name', 'name': 'nzbdrone_name'},
                 {'type': 'text', 'label': 'IP / Host', 'placeholder':'localhost','name': 'nzbdrone_host'},
                 {'type': 'text', 'label': 'Port', 'placeholder':'8989', 'name': 'nzbdrone_port'},
+                {'type': 'text', 'label': 'Basepath', 'placeholder':'/' ,'name': 'nzbdrone_basepath'},
                 {'type': 'text', 'label': 'API key', 'name': 'nzbdrone_apikey'},
+                {'type': 'bool', 'label': 'Use SSL', 'name': 'nzbdrone_ssl'}
         ]})
 
     @cherrypy.expose()
@@ -38,9 +40,12 @@ class NZBDrone:
 
     @cherrypy.expose()
     @cherrypy.tools.json_out()
-    def status(self, nzbdrone_host, nzbdrone_port, nzbdrone_apikey, **kwargs):
+    def status(self, nzbdrone_host, nzbdrone_port, nzbdrone_apikey, nzbdrone_basepath, nzbdrone_ssl = False, **kwargs):
+        ssl = 's' if nzbdrone_ssl else ''
         self.logger.debug("Testing connectivity")
-        url = 'http://' + nzbdrone_host + ':' + nzbdrone_port + '/api/system/status'
+        if not (nzbdrone_basepath.endswith('/')):
+                nzbdrone_basepath += "/"
+        url = 'http' + ssl + '://' + nzbdrone_host + ':' + nzbdrone_port + nzbdrone_basepath + 'api/system/status'
 
         try:
             request = Request(url)
@@ -57,7 +62,7 @@ class NZBDrone:
     @cherrypy.tools.json_out()
     def GetShowList(self):
         self.logger.debug("Fetching Show list")
-        return self.fetch('shows&sort=name')
+        return self.fetch('series')
 
 #TODO
     @cherrypy.expose()
@@ -154,22 +159,24 @@ class NZBDrone:
 #TODO
     def fetch(self, cmd, img=False, timeout=10):
         try:
-            host = htpc.settings.get('sickbeard_host', '')
-            port = str(htpc.settings.get('sickbeard_port', ''))
-            apikey = htpc.settings.get('sickbeard_apikey', '')
-            ssl = 's' if htpc.settings.get('sickbeard_ssl', 0) else ''
-            sickbeard_basepath = htpc.settings.get('sickbeard_basepath', '/')
+            host = htpc.settings.get('nzbdrone_host', '')
+            port = str(htpc.settings.get('nzbdrone_port', ''))
+            apikey = htpc.settings.get('nzbdrone_apikey', '')
+            ssl = 's' if htpc.settings.get('nzbdrone_ssl', 0) else ''
+            nzbdrone_basepath = htpc.settings.get('nzbdrone_basepath', '/')
 
-            if not (sickbeard_basepath.endswith('/')):
-                sickbeard_basepath += "/"
-            url = 'http' + ssl + '://' + host + ':' + str(port) + sickbeard_basepath + 'api/' + apikey + '/?cmd=' + cmd
+            if not (nzbdrone_basepath.endswith('/')):
+                nzbdrone_basepath += "/"
+            url = 'http' + ssl + '://' + host + ':' + str(port) + nzbdrone_basepath + 'api/' + cmd
+            request = Request(url)
+            request.add_header("X-Api-Key", apikey)
 
             self.logger.debug("Fetching information from: " + url)
 
             if (img == True):
-                return urlopen(url, timeout=timeout).read()
+                return urlopen(request, timeout=timeout).read()
 
-            return loads(urlopen(url, timeout=timeout).read())
+            return loads(urlopen(request, timeout=timeout).read())
         except:
             self.logger.error("Unable to fetch information")
             return
